@@ -7,7 +7,6 @@ import {
   Grid,
   GridItem,
   Divider,
-  Spinner,
   Text,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
@@ -57,6 +56,9 @@ const Streams = ({ flow, type, initiated, tokenBalances }) => {
                         0,
                         4
                       )}...${_in.sender.id.substring(38)}`
+                    : _in.receiver.id ==
+                      "0xf96e197fE7b05407dA8d0b38D75e371CbA8e22c6".toLowerCase()
+                    ? "Streamfi DCA"
                     : `${_in.receiver.id.substring(
                         0,
                         4
@@ -140,6 +142,7 @@ export default function Dashboard() {
   const [tokenBalances, setTokenBalances] = useState();
   const { address, isConnected } = useAccount();
   const [auth, setAuth] = useState();
+  const [chain, setChain] = useState();
 
   useEffect(() => {
     setAuth(isConnected);
@@ -148,7 +151,15 @@ export default function Dashboard() {
   useEffect(() => {
     if (auth) {
       (async function () {
-        setInitiated(await init());
+        const chainId = await window.ethereum.request({
+          method: "eth_chainId",
+        });
+        if (chainId == "0x5") {
+          setChain(true);
+          setInitiated(await init());
+        } else {
+          setChain(false);
+        }
       })();
     }
   }, [auth]);
@@ -218,64 +229,76 @@ export default function Dashboard() {
       >
         <Header />
         {auth ? (
-          <Flex
-            flexDir={"column"}
-            w={"910px"}
-            bg={"#0F1215"}
-            marginTop={"100px"}
-            marginBottom={"100px"}
-          >
-            <Grid
-              templateColumns="repeat(5, 1fr)"
-              fontSize={"18px"}
-              fontWeight={"medium"}
+          chain ? (
+            <Flex
+              flexDir={"column"}
+              w={"910px"}
+              bg={"#0F1215"}
+              marginTop={"100px"}
+              marginBottom={"100px"}
             >
-              <Flex>
-                <GridItem whiteSpace={"nowrap"} w={"182px"} align={"center"}>
-                  Asset
-                </GridItem>
-                <GridItem whiteSpace={"nowrap"} w={"182px"} align={"center"}>
-                  Balance
-                </GridItem>
-                <GridItem whiteSpace={"nowrap"} w={"182px"} align={"center"}>
-                  Sender/Reciever
-                </GridItem>
-                <GridItem whiteSpace={"nowrap"} w={"182px"} align={"center"}>
-                  Inflow/Outflow
-                </GridItem>
-                <GridItem
-                  whiteSpace={"nowrap"}
-                  w={"182px"}
-                  align={"center"}
-                ></GridItem>
-              </Flex>
-            </Grid>
-            <Divider marginTop={"35px"} opacity={"60%"} />
-            {initiated ? (
-              <>
-                <Streams
-                  flow={inflow}
-                  type="inflow"
-                  initiated={initiated}
-                  tokenBalances={tokenBalances}
-                />
-                <Streams
-                  flow={outflow}
-                  type="outflow"
-                  initiated={initiated}
-                  tokenBalances={tokenBalances}
-                />
-              </>
-            ) : (
-              <>
-                <Flex justify={"center"} marginTop={"40px"}>
-                  <Loading type="points-opacity" size={"lg"} color={"white"} />
+              <Grid
+                templateColumns="repeat(5, 1fr)"
+                fontSize={"18px"}
+                fontWeight={"medium"}
+              >
+                <Flex>
+                  <GridItem whiteSpace={"nowrap"} w={"182px"} align={"center"}>
+                    Asset
+                  </GridItem>
+                  <GridItem whiteSpace={"nowrap"} w={"182px"} align={"center"}>
+                    Balance
+                  </GridItem>
+                  <GridItem whiteSpace={"nowrap"} w={"182px"} align={"center"}>
+                    Sender/Reciever
+                  </GridItem>
+                  <GridItem whiteSpace={"nowrap"} w={"182px"} align={"center"}>
+                    Inflow/Outflow
+                  </GridItem>
+                  <GridItem
+                    whiteSpace={"nowrap"}
+                    w={"182px"}
+                    align={"center"}
+                  ></GridItem>
                 </Flex>
-              </>
-            )}
-          </Flex>
+              </Grid>
+              <Divider marginTop={"35px"} opacity={"60%"} />
+              {initiated ? (
+                <>
+                  <Streams
+                    flow={inflow}
+                    type="inflow"
+                    initiated={initiated}
+                    tokenBalances={tokenBalances}
+                  />
+                  <Streams
+                    flow={outflow}
+                    type="outflow"
+                    initiated={initiated}
+                    tokenBalances={tokenBalances}
+                  />
+                </>
+              ) : (
+                <>
+                  <Flex justify={"center"} marginTop={"40px"}>
+                    <Loading
+                      type="points-opacity"
+                      size={"lg"}
+                      color={"white"}
+                    />
+                  </Flex>
+                </>
+              )}
+            </Flex>
+          ) : (
+            <Flex marginTop={"350px"} w={"400px"} color={"white"}>
+              <Text fontSize={"28px"} fontWeight={"medium"}>
+                Change Network to Goerli
+              </Text>
+            </Flex>
+          )
         ) : (
-          <Flex marginTop={"200px"} w={"518px"} color={"white"}>
+          <Flex marginTop={"350px"} w={"518px"} color={"white"}>
             <Text fontSize={"28px"} fontWeight={"medium"}>
               Connect Wallet to start using streamfi
             </Text>
